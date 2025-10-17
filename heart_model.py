@@ -1,5 +1,3 @@
-# heart_model_full_testcases_ensemble.py
-
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, LabelEncoder
@@ -9,15 +7,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# -----------------------------
-# 1️⃣ Load the dataset
-# -----------------------------
 df = pd.read_csv("heart.csv")
 print("Dataset loaded. First 5 rows:\n", df.head())
 
-# -----------------------------
-# 2️⃣ Encode categorical columns
-# -----------------------------
 label_encoders = {}
 for col in df.columns:
     if df[col].dtype == 'object':
@@ -26,36 +18,21 @@ for col in df.columns:
         label_encoders[col] = le
         print(f"{col} mapping: {dict(zip(le.classes_, le.transform(le.classes_)))}")
 
-# -----------------------------
-# 3️⃣ Separate features and target
-# -----------------------------
 X = df.drop("target", axis=1)
 y = df["target"]
 
-# -----------------------------
-# 4️⃣ Handle missing values
-# -----------------------------
 imputer = SimpleImputer(strategy="mean")
 X = imputer.fit_transform(X)
 
-# -----------------------------
-# 5️⃣ Feature scaling
-# -----------------------------
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 print("Preprocessing complete. Feature shape:", X.shape, "Target shape:", y.shape)
 
-# -----------------------------
-# 6️⃣ Split data into training and testing sets
-# -----------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 print("Data split complete. X_train:", X_train.shape, "X_test:", X_test.shape)
 
-# -----------------------------
-# 7️⃣ Train models
-# -----------------------------
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
 rf.fit(X_train, y_train)
 
@@ -67,9 +44,6 @@ knn.fit(X_train, y_train)
 
 print("All models trained successfully.")
 
-# -----------------------------
-# 8️⃣ Evaluate models
-# -----------------------------
 models = {
     "Random Forest": rf,
     "Logistic Regression": lr,
@@ -88,12 +62,8 @@ for name, model in models.items():
 best_model_name = max(accuracies, key=accuracies.get)
 print(f"\nBest performing model: {best_model_name} with accuracy {accuracies[best_model_name]:.4f}")
 
-# -----------------------------
-# 9️⃣ User Input for New Patient Prediction (Numeric Version)
-# -----------------------------
 print("\nEnter new patient details for heart disease prediction:\n")
 
-# Show numeric mappings for categorical columns
 print("Use the following numeric mappings for categorical inputs:\n")
 
 for col, le in label_encoders.items():
@@ -101,7 +71,6 @@ for col, le in label_encoders.items():
     print(f"{col}: {mapping}")
 print("\n")
 
-# Get user inputs
 patient_data = {}
 for feature in [
     "age",
@@ -121,7 +90,6 @@ for feature in [
     value = float(input(f"Enter {feature.replace('_', ' ')}: "))
     patient_data[feature] = value
 
-# Directly use numeric values (no need for encoding now)
 patient_values = [patient_data[f] for f in [
     "age",
     "sex",
@@ -138,10 +106,8 @@ patient_values = [patient_data[f] for f in [
     "thalassemia"
 ]]
 
-# Scale the input
 patient_scaled = scaler.transform([patient_values])
 
-# Model predictions
 print("\nPrediction Results:\n")
 ensemble_votes = []
 
@@ -151,6 +117,5 @@ for name, model in models.items():
     ensemble_votes.append(pred_class)
     print(f"{name} Prediction: {'Yes' if pred_class == 1 else 'No'} (Prob: {pred_prob:.2f})")
 
-# Ensemble decision
 final_vote = "Yes" if sum(ensemble_votes) >= 2 else "No"
 print(f"\n✅ Final Ensemble Prediction: {final_vote}")
