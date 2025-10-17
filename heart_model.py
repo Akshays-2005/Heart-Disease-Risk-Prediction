@@ -89,46 +89,21 @@ best_model_name = max(accuracies, key=accuracies.get)
 print(f"\nBest performing model: {best_model_name} with accuracy {accuracies[best_model_name]:.4f}")
 
 # -----------------------------
-# 9️⃣ Test cases for new patients
+# 9️⃣ User Input for New Patient Prediction (Numeric Version)
 # -----------------------------
-print("\nRunning predefined test cases...\n")
+print("\nEnter new patient details for heart disease prediction:\n")
 
-# Define test cases: strings for categorical features
-test_cases = [
-    {
-        "age": 45,
-        "sex": "Female",
-        "chest_pain_type": "Typical angina",
-        "resting_blood_pressure": 120,
-        "cholestoral": 200,
-        "fasting_blood_sugar": "Lower than 120 mg/ml",
-        "rest_ecg": "Normal",
-        "thalach": 160,
-        "exercise_induced_angina": "No",
-        "oldpeak": 1.0,
-        "slope": "Flat",
-        "vessels_colored_by_flourosopy": "Zero",
-        "thalassemia": "Reversable Defect"
-    },
-    {
-        "age": 63,
-        "sex": "Male",
-        "chest_pain_type": "Asymptomatic",
-        "resting_blood_pressure": 145,
-        "cholestoral": 233,
-        "fasting_blood_sugar": "Greater than 120 mg/ml",
-        "rest_ecg": "Left ventricular hypertrophy",
-        "thalach": 150,
-        "exercise_induced_angina": "Yes",
-        "oldpeak": 2.3,
-        "slope": "Upsloping",
-        "vessels_colored_by_flourosopy": "Two",
-        "thalassemia": "Reversable Defect"
-    }
-]
+# Show numeric mappings for categorical columns
+print("Use the following numeric mappings for categorical inputs:\n")
 
-# Feature order (match CSV columns exactly)
-feature_order = [
+for col, le in label_encoders.items():
+    mapping = dict(zip(le.classes_, le.transform(le.classes_)))
+    print(f"{col}: {mapping}")
+print("\n")
+
+# Get user inputs
+patient_data = {}
+for feature in [
     "age",
     "sex",
     "chest_pain_type",
@@ -142,30 +117,40 @@ feature_order = [
     "slope",
     "vessels_colored_by_flourosopy",
     "thalassemia"
-]
+]:
+    value = float(input(f"Enter {feature.replace('_', ' ')}: "))
+    patient_data[feature] = value
 
-# Predict for each test case
-for i, case in enumerate(test_cases, start=1):
-    # Encode categorical features
-    patient_values = []
-    for feature in feature_order:
-        if feature in label_encoders:
-            patient_values.append(label_encoders[feature].transform([case[feature]])[0])
-        else:
-            patient_values.append(case[feature])
-    
-    # Scale
-    patient_scaled = scaler.transform([patient_values])
-    
-    print(f"\nTest Case {i}:")
-    ensemble_votes = []
-    
-    for name, model in models.items():
-        pred_class = model.predict(patient_scaled)[0]
-        pred_prob = model.predict_proba(patient_scaled)[0][1]  # probability of '1' (heart disease)
-        ensemble_votes.append(pred_class)
-        print(f"{name} Prediction: {'Yes' if pred_class==1 else 'No'} (Prob: {pred_prob:.2f})")
-    
-    # Ensemble prediction (majority vote)
-    final_vote = "Yes" if sum(ensemble_votes) >= 2 else "No"
-    print(f"Ensemble Prediction: {final_vote}")
+# Directly use numeric values (no need for encoding now)
+patient_values = [patient_data[f] for f in [
+    "age",
+    "sex",
+    "chest_pain_type",
+    "resting_blood_pressure",
+    "cholestoral",
+    "fasting_blood_sugar",
+    "rest_ecg",
+    "thalach",
+    "exercise_induced_angina",
+    "oldpeak",
+    "slope",
+    "vessels_colored_by_flourosopy",
+    "thalassemia"
+]]
+
+# Scale the input
+patient_scaled = scaler.transform([patient_values])
+
+# Model predictions
+print("\nPrediction Results:\n")
+ensemble_votes = []
+
+for name, model in models.items():
+    pred_class = model.predict(patient_scaled)[0]
+    pred_prob = model.predict_proba(patient_scaled)[0][1]
+    ensemble_votes.append(pred_class)
+    print(f"{name} Prediction: {'Yes' if pred_class == 1 else 'No'} (Prob: {pred_prob:.2f})")
+
+# Ensemble decision
+final_vote = "Yes" if sum(ensemble_votes) >= 2 else "No"
+print(f"\n✅ Final Ensemble Prediction: {final_vote}")
